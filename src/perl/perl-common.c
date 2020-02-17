@@ -37,6 +37,7 @@
 #include <irssi/src/core/chat-protocols.h>
 #include <irssi/src/core/chatnets.h>
 #include <irssi/src/core/servers.h>
+#include <irssi/src/core/tls.h>
 #include <irssi/src/core/channels.h>
 #include <irssi/src/core/queries.h>
 #include <irssi/src/core/nicklist.h>
@@ -249,6 +250,31 @@ void irssi_callXS(void (*subaddr)(pTHX_ CV* cv), CV *cv, SV **mark)
 	PUSHMARK(mark);
 
 	(*subaddr)(aTHX_ cv);
+}
+
+void perl_tls_fill_hash(HV *hv, TLS_REC *tls)
+{
+        AV *av;
+        GSList *tmp;
+
+        (void) hv_store(hv, "protocol_version", 16, new_pv(tls->protocol_version), 0);
+        (void) hv_store(hv, "cipher", 6, new_pv(tls->cipher), 0);
+        (void) hv_store(hv, "cipher_size", 11, newSViv(tls->cipher_size), 0);
+        (void) hv_store(hv, "public_key_algorithm", 20, new_pv(tls->public_key_algorithm), 0);
+        (void) hv_store(hv, "public_key_fingerprint", 22, new_pv(tls->public_key_fingerprint), 0);
+        (void) hv_store(hv, "public_key_fingerprint_algorithm", 32, new_pv(tls->public_key_fingerprint_algorithm), 0);
+        (void) hv_store(hv, "public_key_size", 15, newSViv(tls->public_key_size), 0);
+        (void) hv_store(hv, "certificate_fingerprint", 23, new_pv(tls->certificate_fingerprint), 0);
+        (void) hv_store(hv, "certificate_fingerprint_algorithm", 33, new_pv(tls->certificate_fingerprint_algorithm), 0);
+        (void) hv_store(hv, "not_after", 9, new_pv(tls->not_after), 0);
+        (void) hv_store(hv, "not_before", 10, new_pv(tls->not_before), 0);
+        (void) hv_store(hv, "ephemeral_key_algorithm", 23, new_pv(tls->ephemeral_key_algorithm), 0);
+        (void) hv_store(hv, "ephemeral_key_size", 18, newSViv(tls->ephemeral_key_size), 0);
+
+        av = newAV();
+        for (tmp = tls->certs; tmp != NULL; tmp = tmp->next)
+                av_push(av, new_pv(tmp->data));
+        (void) hv_store(hv, "certs", 10, newRV_noinc((SV*)av), 0);
 }
 
 void perl_chatnet_fill_hash(HV *hv, CHATNET_REC *chatnet)
@@ -610,6 +636,12 @@ static void perl_register_protocol(CHAT_PROTOCOL_REC *rec)
 	g_snprintf(stash, sizeof(stash), "Irssi::%s::Chatnet", name);
 	irssi_add_object(type, chat_type, stash,
 			 (PERL_OBJECT_FUNC) perl_chatnet_fill_hash);
+
+	/* tls specific */
+	type = module_get_uniq_id("TLS", 0);
+	g_snprintf(stash, sizeof(stash), "Irssi::%s::TLS", name);
+	irssi_add_object(type, chat_type, stash,
+			 (PERL_OBJECT_FUNC) perl_tls_fill_hash);
 
 	/* server specific */
 	type = module_get_uniq_id("SERVER", 0);
