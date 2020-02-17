@@ -13,6 +13,7 @@
 #include <irssi/src/core/masks.h>
 #include <irssi/src/core/special-vars.h>
 #include <irssi/src/core/window-item-def.h>
+#include <irssi/src/core/tls.h>
 
 #include <irssi/src/core/chat-protocols.h>
 #include <irssi/src/core/chatnets.h>
@@ -35,6 +36,7 @@ typedef RAWLOG_REC *Irssi__Rawlog;
 typedef IGNORE_REC *Irssi__Ignore;
 typedef MODULE_REC *Irssi__Module;
 typedef WI_ITEM_REC *Irssi__Windowitem;
+typedef TLS_REC *Irssi__Tls;
 
 typedef CHATNET_REC *Irssi__Chatnet;
 typedef SERVER_REC *Irssi__Server;
